@@ -39,11 +39,11 @@ def train_bot(cat_name, render: int = -1):
     #############################################################################
     
     learning_rate = 0.9
-    discount_factor = 0.95
+    discount_factor = 0.97
     exploration_rate = 1.0
     max_exploration_rate = 1.0
     min_exploration_rate = 0.01
-    exploration_decay_rate = 0.9995
+    exploration_decay_rate = 0.998
     max_steps_per_episode = 60 
 
     
@@ -74,6 +74,8 @@ def train_bot(cat_name, render: int = -1):
             # Manually compute reward
             if done:
                 reward = 100
+            elif truncated:
+                reward = -10
             else:
                 reward = -1
 
