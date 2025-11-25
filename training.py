@@ -8,12 +8,11 @@ from cat_env import make_env
 #############################################################################
 # TODO: YOU MAY ADD ADDITIONAL IMPORTS OR FUNCTIONS HERE.                   #
 #############################################################################
-
-
-
-
-
-
+def choose_action(state: int, q_table: Dict[int, np.ndarray], exploration_rate: float, n_actions: int) -> int:
+    if random.uniform(0, 1) < exploration_rate:
+        return random.randint(0, n_actions - 1)
+    else:
+        return int(np.argmax(q_table[state]))
 
 
 #############################################################################
@@ -39,15 +38,13 @@ def train_bot(cat_name, render: int = -1):
     # training process such as learning rate, exploration rate, etc.            #
     #############################################################################
     
-    
-
-
-
-
-
-
-
-
+    learning_rate = 0.9
+    discount_factor = 0.97
+    exploration_rate = 1.0
+    max_exploration_rate = 1.0
+    min_exploration_rate = 0.01
+    exploration_decay_rate = 0.998
+    max_steps_per_episode = 60 
 
     
     #############################################################################
@@ -65,39 +62,38 @@ def train_bot(cat_name, render: int = -1):
         # 4. Since this environment doesn't give rewards, compute reward manually    #
         # 5. Update the Q-table accordingly based on agent's rewards.                #
         ############################################################################## 
-               
+        initial_state, info = env.reset()
+        state = int(initial_state)
+        done = False
+        truncated = False
+
+        for step in range(max_steps_per_episode):
+            action = choose_action(state, q_table, exploration_rate, env.action_space.n)
+            next_state, reward, done, truncated, info = env.step(action)
+
+            # Manually compute reward
+            if done:
+                reward = 100
+            elif truncated:
+                reward = -10
+            else:
+                reward = -1
+
+            # Update Q-value using the Q-learning formula
+            old_value = q_table[state][action]
+            next_max = np.max(q_table[next_state])
+
+            new_value = (1 - learning_rate) * old_value + learning_rate * (reward + discount_factor * next_max)
+            q_table[state][action] = new_value
+
+            state = next_state
+
+            if done or truncated:
+                break       
         
+        exploration_rate = max(min_exploration_rate, exploration_rate * exploration_decay_rate)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
         
         #############################################################################
         # END OF YOUR CODE. DO NOT MODIFY ANYTHING BEYOND THIS LINE.                #
