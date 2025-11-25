@@ -38,8 +38,8 @@ def train_bot(cat_name, render: int = -1):
     # training process such as learning rate, exploration rate, etc.            #
     #############################################################################
     
-    learning_rate = 0.9
-    discount_factor = 0.97
+    learning_rate = 0.2
+    discount_factor = 0.99
     exploration_rate = 1.0
     max_exploration_rate = 1.0
     min_exploration_rate = 0.01
