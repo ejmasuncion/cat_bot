@@ -44,7 +44,7 @@ def train_bot(cat_name, render: int = -1):
     max_exploration_rate = 1.0
     min_exploration_rate = 0.01
     exploration_decay_rate = 0.9995
-    max_steps_per_episode = 1000 
+    max_steps_per_episode = 60 
 
     
     #############################################################################
