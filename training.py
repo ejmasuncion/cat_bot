@@ -14,13 +14,17 @@ def choose_action(state: int, q_table: Dict[int, np.ndarray], exploration_rate: 
     else:
         return int(np.argmax(q_table[state]))
 
-
 #############################################################################
 # END OF YOUR CODE. DO NOT MODIFY ANYTHING BEYOND THIS LINE.                #
 #############################################################################
 
 def train_bot(cat_name, render: int = -1):
+    start_time = time.time()
     env = make_env(cat_type=cat_name)
+
+    successful_catches = 0
+    steps_in_success = []
+    path_observations = []
     
     # Initialize Q-table with all possible states (0-9999)
     # Initially, all action values are zero.
@@ -74,6 +78,8 @@ def train_bot(cat_name, render: int = -1):
             # Manually compute reward
             if done:
                 reward = 100
+                successful_catches += 1
+                steps_in_success.append(step + 1)
             elif truncated:
                 reward = -10
             else:
@@ -92,8 +98,7 @@ def train_bot(cat_name, render: int = -1):
                 break       
         
         exploration_rate = max(min_exploration_rate, exploration_rate * exploration_decay_rate)
-
-
+    
         
         #############################################################################
         # END OF YOUR CODE. DO NOT MODIFY ANYTHING BEYOND THIS LINE.                #
@@ -104,5 +109,13 @@ def train_bot(cat_name, render: int = -1):
             viz_env = make_env(cat_type=cat_name)
             play_q_table(viz_env, q_table, max_steps=100, move_delay=0.02, window_title=f"{cat_name}: Training Episode {ep}/{episodes}")
             print('episode', ep)
+    
+    end_time = time.time()
+    training_duration = end_time - start_time
+
+    print(f"\nTraining completed in {training_duration:.2f} seconds.")
+    print(f"Total Successful Catches during Training: {successful_catches}")
+    print(f"Success rate: {successful_catches}/{episodes}")
+    print(f"Average Steps to Catch during Training: {np.mean(steps_in_success) if steps_in_success else max_steps_per_episode:.2f}")
 
     return q_table
