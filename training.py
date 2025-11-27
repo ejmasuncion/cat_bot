@@ -19,12 +19,13 @@ def choose_action(state: int, q_table: Dict[int, np.ndarray], exploration_rate: 
 def analyze_reward(reward_tuple: tuple, env : CatChaseEnv)-> int:
     done = reward_tuple[2]
     truncated = reward_tuple[3]
-    print(env.cat.current_distance)
 
     if done:
-        return 100
-    elif truncated:
-        return -1*env.cat.current_distance
+        return 1000
+    elif truncated and env.cat.current_distance < env.cat.prev_distance:
+        return -1 * (env.cat.current_distance / 2)
+    elif truncated and env.cat.current_distance > env.cat.prev_distance:
+        return -5 * (env.cat.current_distance / 2)
     else:
         return -1
 
@@ -52,12 +53,14 @@ def train_bot(cat_name, render: int = -1):
     # training process such as learning rate, exploration rate, etc.            #
     #############################################################################
     
-    learning_rate = 0.2
+    learning_rate = 0.5
     discount_factor = 0.99
     exploration_rate = 1.0
-    max_exploration_rate = 1.0
+    min_learning_rate = 0.1
     min_exploration_rate = 0.01
+    learning_decay_rate = 0.999
     exploration_decay_rate = 0.998
+    max_steps_per_episode = 60 
 
     # Changed from 60 to 1000, Kaizen
     max_steps_per_episode = 60
@@ -102,6 +105,7 @@ def train_bot(cat_name, render: int = -1):
             if done or truncated:
                 break       
         
+        learning_rate = max(min_learning_rate, learning_rate * learning_decay_rate)
         exploration_rate = max(min_exploration_rate, exploration_rate * exploration_decay_rate)
 
 
