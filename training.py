@@ -14,18 +14,16 @@ def choose_action(state: int, q_table: Dict[int, np.ndarray], exploration_rate: 
     else:
         return int(np.argmax(q_table[state]))
 
-def analyze_reward(reward_tuple: tuple, env : CatChaseEnv)-> int:
+def analyze_reward(reward_tuple: tuple, env : CatChaseEnv, distance_change)-> int:
     done = reward_tuple[2]
     truncated = reward_tuple[3]
 
     if done:
         return 100
-    elif env.cat.current_distance < env.cat.prev_distance:
-        return 1 * (env.cat.current_distance)
-    elif env.cat.current_distance > env.cat.prev_distance:
-        return -5 * (env.cat.current_distance)
+    elif truncated:
+        return -10
     else:
-        return -1
+        return (distance_change) - 1
 
 #############################################################################
 # END OF YOUR CODE. DO NOT MODIFY ANYTHING BEYOND THIS LINE.                #
@@ -58,9 +56,9 @@ def train_bot(cat_name, render: int = -1):
     learning_rate = 0.5
     discount_factor = 0.99
     exploration_rate = 1.0
-    min_learning_rate = 0.01
+    min_learning_rate = 0.1
     min_exploration_rate = 0.01
-    learning_decay_rate = 0.998
+    learning_decay_rate = 0.999
     exploration_decay_rate = 0.998
     max_steps_per_episode = 60 
 
@@ -90,7 +88,8 @@ def train_bot(cat_name, render: int = -1):
             next_state, reward, done, truncated, info = env.step(action)
 
             reward_tuple = tuple([next_state, reward, done, truncated, info])
-            reward = analyze_reward(reward_tuple, env)
+            distance_change = env.cat.prev_distance - env.cat.current_distance
+            reward = analyze_reward(reward_tuple, env, distance_change)
 
             # Manually compute reward
             if done:
