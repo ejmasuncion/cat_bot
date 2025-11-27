@@ -2,9 +2,11 @@ import random
 import time
 from typing import Dict
 import numpy as np
+import math
 import pygame
 from utility import play_q_table
-from cat_env import make_env
+from cat_env import make_env, CatChaseEnv 
+
 #############################################################################
 # TODO: YOU MAY ADD ADDITIONAL IMPORTS OR FUNCTIONS HERE.                   #
 #############################################################################
@@ -13,6 +15,42 @@ def choose_action(state: int, q_table: Dict[int, np.ndarray], exploration_rate: 
         return random.randint(0, n_actions - 1)
     else:
         return int(np.argmax(q_table[state]))
+    
+def analyze_reward(reward_tuple: tuple, env : CatChaseEnv)-> int:
+    # nextState = reward_tuple[0]
+    done = reward_tuple[2]
+    truncated = reward_tuple[2]
+    # info = reward_tuple[4]
+
+    agent_pos = env.agent_pos
+    cat_pos = env.cat.pos
+
+    x_gap = agent_pos[0] - cat_pos[0]
+    y_gap = agent_pos[1] - cat_pos[1]
+    agent_cat_gap = math.sqrt(x_gap*x_gap + y_gap*y_gap)
+    # print("env.agent_pos: ", env.agent_pos)
+    # print("env.cat.pos: ", env.cat.pos)
+    # print("Euclidean distance: ", env.cat.current_distance)
+
+
+
+    if done:
+        return 1
+    # elif truncated:
+        # Take the distance between cat and player.
+        #  
+
+        # return env.cat.current_distance
+
+        # return agent_cat_gap*-1
+        # return -10
+    else:
+        # return agent_cat_gap*-1
+        return -1*env.cat.current_distance
+        # return -999
+
+
+
 
 
 #############################################################################
@@ -44,8 +82,9 @@ def train_bot(cat_name, render: int = -1):
     max_exploration_rate = 1.0
     min_exploration_rate = 0.01
     exploration_decay_rate = 0.998
-    max_steps_per_episode = 60 
 
+    # Changed from 60 to 1000, Kaizen
+    max_steps_per_episode = 1000 
     
     #############################################################################
     # END OF YOUR CODE. DO NOT MODIFY ANYTHING BEYOND THIS LINE.                #
@@ -71,13 +110,9 @@ def train_bot(cat_name, render: int = -1):
             action = choose_action(state, q_table, exploration_rate, env.action_space.n)
             next_state, reward, done, truncated, info = env.step(action)
 
+            reward_tuple = tuple([next_state, reward, done, truncated, info])
             # Manually compute reward
-            if done:
-                reward = 100
-            elif truncated:
-                reward = -10
-            else:
-                reward = -1
+            reward = analyze_reward(reward_tuple, env)
 
             # Update Q-value using the Q-learning formula
             old_value = q_table[state][action]
