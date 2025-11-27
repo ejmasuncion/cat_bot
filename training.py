@@ -38,6 +38,7 @@ def train_bot(cat_name, render: int = -1):
 
     successful_catches = 0
     steps_in_success = []
+    steps_per_100 = []
     path_observations = []
     
     # Initialize Q-table with all possible states (0-9999)
@@ -98,6 +99,8 @@ def train_bot(cat_name, render: int = -1):
             if done:
                 successful_catches += 1
                 steps_in_success.append(step + 1)
+            # elif truncated:
+            #     steps_in_success.append(max_steps_per_episode)
 
             # Update Q-value using the Q-learning formula
             old_value = q_table[state][action]
@@ -113,6 +116,8 @@ def train_bot(cat_name, render: int = -1):
         
         learning_rate = max(min_learning_rate, learning_rate * learning_decay_rate)
         exploration_rate = max(min_exploration_rate, exploration_rate * exploration_decay_rate)
+        if ep % 100 == 0:
+            steps_per_100.append(step + 1)
     
         
         #############################################################################
@@ -132,5 +137,6 @@ def train_bot(cat_name, render: int = -1):
     print(f"Total Successful Catches during Training: {successful_catches}")
     print(f"Success rate: {successful_catches}/{episodes}")
     print(f"Average Steps to Catch during Training: {np.mean(steps_in_success) if steps_in_success else max_steps_per_episode:.2f}")
+    print(steps_per_100)
 
     return q_table
