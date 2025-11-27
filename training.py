@@ -17,40 +17,16 @@ def choose_action(state: int, q_table: Dict[int, np.ndarray], exploration_rate: 
         return int(np.argmax(q_table[state]))
     
 def analyze_reward(reward_tuple: tuple, env : CatChaseEnv)-> int:
-    # nextState = reward_tuple[0]
     done = reward_tuple[2]
-    truncated = reward_tuple[2]
-    # info = reward_tuple[4]
-
-    agent_pos = env.agent_pos
-    cat_pos = env.cat.pos
-
-    x_gap = agent_pos[0] - cat_pos[0]
-    y_gap = agent_pos[1] - cat_pos[1]
-    agent_cat_gap = math.sqrt(x_gap*x_gap + y_gap*y_gap)
-    # print("env.agent_pos: ", env.agent_pos)
-    # print("env.cat.pos: ", env.cat.pos)
-    # print("Euclidean distance: ", env.cat.current_distance)
-
-
+    truncated = reward_tuple[3]
+    print(env.cat.current_distance)
 
     if done:
-        return 1
-    # elif truncated:
-        # Take the distance between cat and player.
-        #  
-
-        # return env.cat.current_distance
-
-        # return agent_cat_gap*-1
-        # return -10
-    else:
-        # return agent_cat_gap*-1
+        return 100
+    elif truncated:
         return -1*env.cat.current_distance
-        # return -999
-
-
-
+    else:
+        return -1
 
 
 #############################################################################
@@ -84,7 +60,7 @@ def train_bot(cat_name, render: int = -1):
     exploration_decay_rate = 0.998
 
     # Changed from 60 to 1000, Kaizen
-    max_steps_per_episode = 1000 
+    max_steps_per_episode = 60
     
     #############################################################################
     # END OF YOUR CODE. DO NOT MODIFY ANYTHING BEYOND THIS LINE.                #
