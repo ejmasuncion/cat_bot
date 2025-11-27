@@ -4,7 +4,7 @@ from typing import Dict
 import numpy as np
 import pygame
 from utility import play_q_table
-from cat_env import make_env
+from cat_env import make_env, CatChaseEnv 
 #############################################################################
 # TODO: YOU MAY ADD ADDITIONAL IMPORTS OR FUNCTIONS HERE.                   #
 #############################################################################
@@ -13,6 +13,19 @@ def choose_action(state: int, q_table: Dict[int, np.ndarray], exploration_rate: 
         return random.randint(0, n_actions - 1)
     else:
         return int(np.argmax(q_table[state]))
+
+def analyze_reward(reward_tuple: tuple, env : CatChaseEnv)-> int:
+    done = reward_tuple[2]
+    truncated = reward_tuple[3]
+
+    if done:
+        return 100
+    elif env.cat.current_distance < env.cat.prev_distance:
+        return 1 * (env.cat.current_distance)
+    elif env.cat.current_distance > env.cat.prev_distance:
+        return -5 * (env.cat.current_distance)
+    else:
+        return -1
 
 #############################################################################
 # END OF YOUR CODE. DO NOT MODIFY ANYTHING BEYOND THIS LINE.                #
@@ -42,11 +55,12 @@ def train_bot(cat_name, render: int = -1):
     # training process such as learning rate, exploration rate, etc.            #
     #############################################################################
     
-    learning_rate = 0.2
+    learning_rate = 0.5
     discount_factor = 0.99
     exploration_rate = 1.0
-    max_exploration_rate = 1.0
+    min_learning_rate = 0.01
     min_exploration_rate = 0.01
+    learning_decay_rate = 0.998
     exploration_decay_rate = 0.998
     max_steps_per_episode = 60 
 
@@ -75,15 +89,13 @@ def train_bot(cat_name, render: int = -1):
             action = choose_action(state, q_table, exploration_rate, env.action_space.n)
             next_state, reward, done, truncated, info = env.step(action)
 
+            reward_tuple = tuple([next_state, reward, done, truncated, info])
+            reward = analyze_reward(reward_tuple, env)
+
             # Manually compute reward
             if done:
-                reward = 100
                 successful_catches += 1
                 steps_in_success.append(step + 1)
-            elif truncated:
-                reward = -10
-            else:
-                reward = -1
 
             # Update Q-value using the Q-learning formula
             old_value = q_table[state][action]
@@ -97,6 +109,7 @@ def train_bot(cat_name, render: int = -1):
             if done or truncated:
                 break       
         
+        learning_rate = max(min_learning_rate, learning_rate * learning_decay_rate)
         exploration_rate = max(min_exploration_rate, exploration_rate * exploration_decay_rate)
     
         
