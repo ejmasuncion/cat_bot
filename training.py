@@ -12,7 +12,10 @@ def choose_action(state: int, q_table: Dict[int, np.ndarray], exploration_rate: 
     if random.uniform(0, 1) < exploration_rate:
         return random.randint(0, n_actions - 1)
     else:
-        return int(np.argmax(q_table[state]))
+        max_q = np.max(q_table[state])
+        best_actions = np.where(q_table[state] == max_q)[0]
+        action = random.choice(best_actions)
+        return action
 
 def analyze_reward(reward_tuple: tuple, env : CatChaseEnv, distance_change)-> int:
     done = reward_tuple[2]
@@ -23,7 +26,7 @@ def analyze_reward(reward_tuple: tuple, env : CatChaseEnv, distance_change)-> in
     elif truncated:
         return -10
     else:
-        return (distance_change) - 1
+        return (distance_change * 1.5) - 1
 
 #############################################################################
 # END OF YOUR CODE. DO NOT MODIFY ANYTHING BEYOND THIS LINE.                #
