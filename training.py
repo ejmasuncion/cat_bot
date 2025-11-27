@@ -12,22 +12,23 @@ from cat_env import make_env, CatChaseEnv
 #############################################################################
 def choose_action(state: int, q_table: Dict[int, np.ndarray], exploration_rate: float, n_actions: int) -> int:
     if random.uniform(0, 1) < exploration_rate:
-        return random.randint(0, n_actions - 1)
+        return random.randint(0, n_actions - 1) #Explore: random action
     else:
-        return int(np.argmax(q_table[state]))
+        max_q = np.max(q_table[state])
+        best_actions = np.where(q_table[state] == max_q)[0]
+        action = random.choice(best_actions)
+        return action #exploit random best action
     
-def analyze_reward(reward_tuple: tuple, env : CatChaseEnv)-> int:
+def analyze_reward(reward_tuple: tuple, env : CatChaseEnv, distance_change)-> int:
     done = reward_tuple[2]
     truncated = reward_tuple[3]
 
     if done:
-        return 1000
-    elif truncated and env.cat.current_distance < env.cat.prev_distance:
-        return -1 * (env.cat.current_distance / 2)
-    elif truncated and env.cat.current_distance > env.cat.prev_distance:
-        return -5 * (env.cat.current_distance / 2)
+        return 100 # reached goal
+    elif truncated:
+        return -10 # reached limit
     else:
-        return -1
+        return (distance_change * 1.5) - 1 # dynamic rewrard based on distance change. 1.5 is the factor to scale the distance change.
 
 
 #############################################################################
@@ -61,9 +62,6 @@ def train_bot(cat_name, render: int = -1):
     learning_decay_rate = 0.999
     exploration_decay_rate = 0.998
     max_steps_per_episode = 60 
-
-    # Changed from 60 to 1000, Kaizen
-    max_steps_per_episode = 60
     
     #############################################################################
     # END OF YOUR CODE. DO NOT MODIFY ANYTHING BEYOND THIS LINE.                #
@@ -82,8 +80,6 @@ def train_bot(cat_name, render: int = -1):
         ############################################################################## 
         initial_state, info = env.reset()
         state = int(initial_state)
-        done = False
-        truncated = False
 
         for step in range(max_steps_per_episode):
             action = choose_action(state, q_table, exploration_rate, env.action_space.n)
@@ -91,7 +87,8 @@ def train_bot(cat_name, render: int = -1):
 
             reward_tuple = tuple([next_state, reward, done, truncated, info])
             # Manually compute reward
-            reward = analyze_reward(reward_tuple, env)
+            distance_change = env.cat.prev_distance - env.cat.current_distance
+            reward = analyze_reward(reward_tuple, env, distance_change)
 
             # Update Q-value using the Q-learning formula
             old_value = q_table[state][action]
